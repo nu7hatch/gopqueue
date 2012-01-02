@@ -51,13 +51,13 @@ func New(max int) (q *Queue) {
 
 // Enqueue puts given item to the queue.
 func (q *Queue) Enqueue(item Interface) (err error) {
+	q.cond.L.Lock()
+	defer q.cond.L.Unlock()
 	if q.Limit > 0 && q.Len() >= q.Limit {
 		return errors.New("Queue limit reached")
 	}
-	q.cond.L.Lock()
 	heap.Push(q.items, item)
 	q.cond.Signal()
-	q.cond.L.Unlock()
 	return
 }
 
