@@ -8,86 +8,119 @@ import (
 	"container/heap"
 	"errors"
 	"sync"
-	"time"
 )
 
+// Only items implementing this interface can be enqueued
+// on the priority queue.
 type Interface interface {
 	Priority() int
 }
 
-type sorter struct {
-	m []Interface
+// Queue is a threadsafe priority queue exchange. Here's
+// a trivial example of usage:
+//
+//     q := pqueue.New(0)
+//     go func() {
+//         for {
+//             task := q.Dequeue()
+//             println(task.(*CustomTask).Name)
+//         }
+//     }()
+//     for i := 0; i < 100; i := 1 {
+//         task := CustomTask{Name: "foo", priority: rand.Intn(10)}
+//         q.Enqueue(&task)
+//     }
+//
+type Queue struct {
+	Limit int
+	items *sorter
+	cond  *sync.Cond
 }
+
+// New creates and initializes a new priority queue, taking
+// a limit as a parameter. If 0 given, then queue will be
+// unlimited. 
+func New(max int) (q *Queue) {
+	var locker sync.Mutex
+	q = &Queue{Limit: max}
+	q.items = new(sorter)
+	q.cond = sync.NewCond(&locker)
+	heap.Init(q.items)
+	return
+}
+
+// Enqueue puts given item to the queue.
+func (q *Queue) Enqueue(item Interface) (err error) {
+	if q.Limit > 0 && q.Len() >= q.Limit {
+		return errors.New("Queue limit reached")
+	}
+	q.cond.L.Lock()
+	heap.Push(q.items, item)
+	q.cond.Signal()
+	q.cond.L.Unlock()
+	return
+}
+
+// Dequeue takes an item from the queue. If queue is empty
+// then should block waiting for at least one item.
+func (q *Queue) Dequeue() (item Interface) {
+	q.cond.L.Lock()	
+start:
+	x := heap.Pop(q.items)
+	if x == nil {
+		q.cond.Wait()
+		goto start
+	}
+	q.cond.L.Unlock()
+	item = x.(Interface)
+	return
+}
+
+// Safely changes enqueued items limit. When limit is set
+// to 0, then queue is unlimited.
+func (q *Queue) ChangeLimit(newLimit int) {
+	q.cond.L.Lock()
+	defer q.cond.L.Unlock()
+	q.Limit = newLimit
+}
+
+// Len returns number of enqueued elemnents.
+func (q *Queue) Len() int {
+	return q.items.Len()
+}
+
+// IsEmpty returns true if queue is empty.
+func (q *Queue) IsEmpty() bool {
+	return q.Len() == 0
+}
+
+type sorter []Interface
 
 func (s *sorter) Push(i interface{}) {
 	item, ok := i.(Interface)
 	if !ok {
 		return
 	}
-	s.m = append(s.m[:], item)
+	*s = append((*s)[:], item)
 }
 
 func (s *sorter) Pop() (x interface{}) {
 	if s.Len() > 0 {
-		x, s.m = s.m[s.Len()-1], s.m[:s.Len()-1]
+		x, *s = (*s)[s.Len()-1], (*s)[:s.Len()-1]
 	}
 	return
 }
 
 func (s *sorter) Len() int {
-	return len(s.m[:])
+	return len((*s)[:])
 }
 
 func (s *sorter) Less(i, j int) bool {
-	return s.m[i].Priority() < s.m[j].Priority()
+	return (*s)[i].Priority() < (*s)[j].Priority()
 }
 
 func (s *sorter) Swap(i, j int) {
 	if s.Len() > 0 {
-		s.m[i], s.m[j] = s.m[j], s.m[i]
+		(*s)[i], (*s)[j] = (*s)[j], (*s)[i]
 	}
-}
-
-type Queue struct {
-	Limit int
-	items *sorter
-	mtx   sync.Mutex
-}
-
-func New(max int) (q *Queue) {
-	q = &Queue{Limit: max}
-	q.items = new(sorter)
-	heap.Init(q.items)
-	return
-}
-
-func (q *Queue) Enqueue(item Interface) (err error) {
-	if q.Limit > 0 && q.Len() >= q.Limit {
-		return errors.New("Queue limit reached")
-	}
-	q.mtx.Lock()
-	heap.Push(q.items, item)
-	q.mtx.Unlock()
-	return
-}
-
-func (q *Queue) Dequeue() (item Interface) {
-start:
-	q.mtx.Lock()
-	x := heap.Pop(q.items)
-	q.mtx.Unlock()
-	if x == nil {
-		<-time.After(1)
-		goto start
-	}
-	item = x.(Interface)
-	return
-}
-
-func (q *Queue) Len() int {
-	return q.items.Len()
-}
-
-func (q *Queue) IsEmpty() bool {
-	return q.Len() == 0
 }

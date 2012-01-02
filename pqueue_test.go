@@ -56,9 +56,9 @@ func TestWaitForDequeue(t *testing.T) {
 			dequeued = true
 		}
 	}()
-	<-time.After(1e3)
-	q.Enqueue(NewDummyTask(1))
 	<-time.After(1e9)
+	q.Enqueue(NewDummyTask(1))
+	<-time.After(1e2)
 	if !dequeued {
 		t.Errorf("Expected to wait for dequeue")
 	}
