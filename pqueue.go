@@ -13,7 +13,7 @@ import (
 // Only items implementing this interface can be enqueued
 // on the priority queue.
 type Interface interface {
-	Priority() int
+	Less(other interface{}) bool
 }
 
 // Queue is a threadsafe priority queue exchange. Here's
@@ -116,7 +116,7 @@ func (s *sorter) Len() int {
 }
 
 func (s *sorter) Less(i, j int) bool {
-	return (*s)[i].Priority() < (*s)[j].Priority()
+	return (*s)[i].Less((*s)[j])
 }
 
 func (s *sorter) Swap(i, j int) {

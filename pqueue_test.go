@@ -18,8 +18,8 @@ func NewDummyTask(p int) *DummyTask {
 	return &DummyTask{priority: p}
 }
 
-func (dt *DummyTask) Priority() int {
-	return dt.priority
+func (dt *DummyTask) Less(other interface{}) bool {
+	return dt.priority < other.(*DummyTask).priority
 }
 
 func TestNewQueue(t *testing.T) {
@@ -39,8 +39,8 @@ func TestEnqueueAndDequeue(t *testing.T) {
 	}
 	for _, x := range []int{1, 2, 3, 3, 4, 7} {
 		task := q.Dequeue().(*DummyTask)
-		if task.Priority() != x {
-			t.Errorf("Expected priority to be %d, given %d", x, task.Priority())
+		if task.priority != x {
+			t.Errorf("Expected priority to be %d, given %d", x, task.priority)
 		}
 	}
 	if q.Len() != 0 {
@@ -129,8 +129,8 @@ func BenchmarkDequeue(b *testing.B) {
 		q.Enqueue(NewDummyTask(1000000))
 	}()
 	for {
-		task := q.Dequeue()
-		if task.Priority() == 1000000 {
+		task := q.Dequeue().(*DummyTask)
+		if task.priority == 1000000 {
 			break
 		}
 	}
@@ -150,8 +150,8 @@ func BenchmarkMultiDequeue(b *testing.B) {
 	for i := 0; i < 4; i += 1 {
 		go func() {
 			for {
-				task := q.Dequeue()
-				if task.Priority() == 1000000 {
+				task := q.Dequeue().(*DummyTask)
+				if task.priority == 1000000 {
 					done <- true
 					break
 				}
