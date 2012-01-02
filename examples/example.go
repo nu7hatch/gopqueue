@@ -7,8 +7,8 @@ type Task struct {
 	priority int
 }
 
-func (t *Task) Priority() int {
-	return t.priority
+func (t *Task) Less(other interface{}) bool {
+	return t.priority < other.(*Task).priority
 }
 
 func main() {
