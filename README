@@ -22,10 +22,7 @@ Here's trivial example of the fast queue usage:
 
 	package main
 
-	import (
-	    pqueue "github.com/nu7hatch/gopqueue"
-	    "time"
-	)
+	import pqueue "github.com/nu7hatch/gopqueue"
 	
 	type Task struct {
 	    Name     string
@@ -37,18 +34,19 @@ Here's trivial example of the fast queue usage:
 	}
 	
 	func main() {
-	    q := pqueue.New()
-	    q.Enqueue(Task{"one", 10})
-	    q.Enqueue(Task{"two", 2})
-	    q.Enqueue(Task{"three", 5})
-	    q.Enqueue(Task{"four", 7})
+	    q := pqueue.New(0)
+	    q.Enqueue(&Task{"one", 10})
+	    q.Enqueue(&Task{"two", 2})
+	    q.Enqueue(&Task{"three", 5})
+	    q.Enqueue(&Task{"four", 7})
 
-	    for task := q.Dequeue() {
+	    for i := 0; i < 4; i += 1 {
+	        task := q.Dequeue()
 	        println(task.(*Task).Name)
 	    }
 	}
 
-	// Should produce:
+	// Produces:
 	//
 	//     two
 	//     three

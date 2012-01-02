@@ -11,3 +11,4 @@ _cgo*
 *.a
 *.mprof
 *.prof
+examples/example
