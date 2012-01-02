@@ -4,11 +4,6 @@ Priority Queue in Go
 This package provides a priority queue implementation and scaffold
 interfaces.
 
-Package provides two kind of queues: the fast queue - `pqueue.Fast`
-- which calculates priorities by considering numeric weights, and
-the flexible queue - `pqueue.Flex`, which allows user to define
-his own priority calculation functions.
-
 Installation
 ------------
 Use the `goinstall` tool:
