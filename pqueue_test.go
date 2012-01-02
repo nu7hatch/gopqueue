@@ -5,8 +5,8 @@
 package pqueue
 
 import (
-	"testing"
 	"math/rand"
+	"testing"
 	"time"
 )
 
@@ -31,13 +31,13 @@ func TestNewQueue(t *testing.T) {
 
 func TestEnqueueAndDequeue(t *testing.T) {
 	q := New(0)
-	for _, x := range []int{1,3,4,2,7,3} {
+	for _, x := range []int{1, 3, 4, 2, 7, 3} {
 		q.Enqueue(NewDummyTask(x))
 	}
 	if q.Len() != 6 {
 		t.Errorf("Expected to enqueue all the items")
 	}
-	for _, x := range []int{1,2,3,3,4,7} {
+	for _, x := range []int{1, 2, 3, 3, 4, 7} {
 		task := q.Dequeue().(*DummyTask)
 		if task.Priority() != x {
 			t.Errorf("Expected priority to be %d, given %d", x, task.Priority())
@@ -69,7 +69,7 @@ func TestIsEmpty(t *testing.T) {
 	if !q.IsEmpty() {
 		t.Errorf("Expected queue to be empty")
 	}
-	for _, x := range []int{1,2,3,4} {
+	for _, x := range []int{1, 2, 3, 4} {
 		q.Enqueue(NewDummyTask(x))
 	}
 	if q.IsEmpty() {
@@ -136,7 +136,7 @@ func BenchmarkDequeue(b *testing.B) {
 	}
 }
 
-func BenchmarkMultiDequeue(b *testing.B) {	
+func BenchmarkMultiDequeue(b *testing.B) {
 	b.StopTimer()
 	q := New(0)
 	done := make(chan bool)

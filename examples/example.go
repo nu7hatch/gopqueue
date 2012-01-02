@@ -8,7 +8,7 @@ type Task struct {
 }
 
 func (t *Task) Priority() int {
-	return t.priority 
+	return t.priority
 }
 
 func main() {
@@ -20,6 +20,6 @@ func main() {
 
 	for i := 0; i < 4; i += 1 {
 		task := q.Dequeue()
-	    println(task.(*Task).Name)
+		println(task.(*Task).Name)
 	}
 }

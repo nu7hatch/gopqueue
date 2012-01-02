@@ -6,8 +6,8 @@ package pqueue
 
 import (
 	"container/heap"
-	"sync"
 	"errors"
+	"sync"
 	"time"
 )
 
@@ -47,11 +47,11 @@ func (s *sorter) Swap(i, j int) {
 		s.m[i], s.m[j] = s.m[j], s.m[i]
 	}
 }
-	
+
 type Queue struct {
-	Limit    int
-	items    *sorter
-	mtx      sync.Mutex
+	Limit int
+	items *sorter
+	mtx   sync.Mutex
 }
 
 func New(max int) (q *Queue) {
