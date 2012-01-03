@@ -106,7 +106,10 @@ func (s *sorter) Push(i interface{}) {
 
 func (s *sorter) Pop() (x interface{}) {
 	if s.Len() > 0 {
-		x, *s = (*s)[s.Len()-1], (*s)[:s.Len()-1]
+		l := s.Len()-1
+		x = (*s)[l]
+		(*s)[l] = nil
+		*s = (*s)[:l]
 	}
 	return
 }
