@@ -6,11 +6,11 @@ interfaces.
 
 Installation
 ------------
-Use the `goinstall` tool:
+Use the ``goinstall`` tool::
 
 	$ goinstall github.com/nu7hatch/gopqueue
 
-... or install it manually:
+... or install it manually::
 
 	$ git clone git://github.com/nu7hatch/gopqueue.git
 	$ cd gopqueue
@@ -18,7 +18,7 @@ Use the `goinstall` tool:
 
 Usage
 -----
-Here's trivial example of the fast queue usage:
+Here's trivial example of the fast queue usage::
 
 	package main
 
