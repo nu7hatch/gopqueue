@@ -48,6 +48,23 @@ func TestEnqueueAndDequeue(t *testing.T) {
 	}
 }
 
+func TestPeek(t *testing.T) {
+	q := New(0)
+	for _, x := range []int{3, 5, 2} {
+		q.Enqueue(NewDummyTask(x))
+	}
+	min := q.Peek().(*DummyTask)
+	if min.priority != 2 {
+		t.Errorf("Expected peeked item to have priority 2")
+	}
+
+	q.Enqueue(NewDummyTask(1))
+	min = q.Peek().(*DummyTask)
+	if min.priority != 1 {
+		t.Errorf("Expected peeked item to have priority 1")
+	}
+}
+
 func TestWaitForDequeue(t *testing.T) {
 	q := New(0)
 	dequeued := false

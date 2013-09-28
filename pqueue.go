@@ -76,6 +76,17 @@ start:
 	return
 }
 
+// Peek returns the minimum item from the queue.
+// If the queue is empty it returns nil.
+func (q *Queue) Peek() (item Interface) {
+	q.cond.L.Lock()
+	defer q.cond.L.Unlock()
+	if q.IsEmpty() {
+		return nil
+	}
+	return (*q.items)[0].(Interface)
+}
+
 // Safely changes enqueued items limit. When limit is set
 // to 0, then queue is unlimited.
 func (q *Queue) ChangeLimit(newLimit int) {
