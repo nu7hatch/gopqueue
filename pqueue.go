@@ -34,17 +34,18 @@ type Interface interface {
 type Queue struct {
 	Limit int
 	items *sorter
+	lock  *sync.RWMutex
 	cond  *sync.Cond
 }
 
 // New creates and initializes a new priority queue, taking
 // a limit as a parameter. If 0 given, then queue will be
-// unlimited. 
+// unlimited.
 func New(max int) (q *Queue) {
-	var locker sync.Mutex
 	q = &Queue{Limit: max}
 	q.items = new(sorter)
-	q.cond = sync.NewCond(&locker)
+	q.lock = &sync.RWMutex{}
+	q.cond = sync.NewCond(q.lock)
 	heap.Init(q.items)
 	return
 }
@@ -53,7 +54,7 @@ func New(max int) (q *Queue) {
 func (q *Queue) Enqueue(item Interface) (err error) {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
-	if q.Limit > 0 && q.Len() >= q.Limit {
+	if q.Limit > 0 && q.items.Len() >= q.Limit {
 		return errors.New("Queue limit reached")
 	}
 	heap.Push(q.items, item)
@@ -64,7 +65,7 @@ func (q *Queue) Enqueue(item Interface) (err error) {
 // Dequeue takes an item from the queue. If queue is empty
 // then should block waiting for at least one item.
 func (q *Queue) Dequeue() (item Interface) {
-	q.cond.L.Lock()	
+	q.cond.L.Lock()
 start:
 	x := heap.Pop(q.items)
 	if x == nil {
@@ -86,6 +87,8 @@ func (q *Queue) ChangeLimit(newLimit int) {
 
 // Len returns number of enqueued elemnents.
 func (q *Queue) Len() int {
+	q.lock.RLock()
+	defer q.lock.RUnlock()
 	return q.items.Len()
 }
 
@@ -106,7 +109,7 @@ func (s *sorter) Push(i interface{}) {
 
 func (s *sorter) Pop() (x interface{}) {
 	if s.Len() > 0 {
-		l := s.Len()-1
+		l := s.Len() - 1
 		x = (*s)[l]
 		(*s)[l] = nil
 		*s = (*s)[:l]
