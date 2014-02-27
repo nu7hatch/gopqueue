@@ -6,6 +6,8 @@ package pqueue
 
 import (
 	"math/rand"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -50,16 +52,16 @@ func TestEnqueueAndDequeue(t *testing.T) {
 
 func TestWaitForDequeue(t *testing.T) {
 	q := New(0)
-	dequeued := false
+	var dequeued int32 = 0
 	go func() {
 		if q.Dequeue() != nil {
-			dequeued = true
+			atomic.StoreInt32(&dequeued, 1)
 		}
 	}()
 	<-time.After(1e9)
 	q.Enqueue(NewDummyTask(1))
 	<-time.After(1e2)
-	if !dequeued {
+	if atomic.LoadInt32(&dequeued) == 0 {
 		t.Errorf("Expected to wait for dequeue")
 	}
 }
@@ -89,6 +91,35 @@ func TestLimit(t *testing.T) {
 	if q.Len() != 10 {
 		t.Errorf("Expected to enqueue only 10 items, %d enqueued", q.Len())
 	}
+}
+
+// The TestLenConcurrentAccess helps to detect race condition
+// Remove q.lock.RLock() & defer q.lock.RUnlock() lines from the pqueue.go
+// and run as go test -race
+func TestLenConcurrentAccess(t *testing.T) {
+	q := New(0)
+	const (
+		TotalTask = 10
+	)
+	sg := &sync.WaitGroup{}
+	sg.Add(TotalTask)
+
+	// simulate concurrent access to the queue
+	go func() {
+		for {
+			q.Len()
+		}
+	}()
+
+	go func() {
+		for i := 0; i < TotalTask; i++ {
+			q.Enqueue(NewDummyTask(i))
+			_ = q.Dequeue().(*DummyTask)
+			sg.Done()
+		}
+	}()
+
+	sg.Wait()
 }
 
 func BenchmarkEnqueue(b *testing.B) {
